@@ -10,15 +10,15 @@ const outputPath = path.join(OUTPUT_DIR, "team.html");
 
 const render = require("./lib/htmlRenderer");
 
-// empty array waiting for the team to be pushed
+
 const team = [];
 
-// the questions for the user
+
 const employeeQuestions = [
     {
         type: "input",
         name: "name",
-        message: "What is the employee's name?",
+        message: "Please enter employee's name.",
         validate: (value) => {
             if (value === "" || value === null) {
                 return "Employee name cannot be empty."
@@ -30,7 +30,7 @@ const employeeQuestions = [
     {
         type: "input",
         name: "id",
-        message: "What is the employee's ID nubmer?",
+        message: "Please enter employee's ID number. ",
         validate: (value) => {
             if (value === "" || value === null) {
                 return "Employee ID cannot be empty."
@@ -42,7 +42,7 @@ const employeeQuestions = [
     {
         type: "input",
         name: "email",
-        message: "What is the Employee's email?",
+        message: "Please enter employee's email address.",
         validate: (value) => {
             if (value === "" || value === null) {
                 return "Employee email cannot be empty."
@@ -54,12 +54,12 @@ const employeeQuestions = [
     {
         type: "list",
         name: "role",
-        message: "What is the Employee's role?",
+        message: "Please select employee's role.",
         choices: ["manager", "engineer", "intern"]
     }
 ];
 
-// the function the filters the employee based on the role, sent to classes
+
 employeeFunc = (name, id, email, role) => {
     if(role === "manager") {
         return new Manager(name, id, email, "");
@@ -70,7 +70,7 @@ employeeFunc = (name, id, email, role) => {
     }
 };
 
-// write to file function that creates the file
+
 writeToFile = (fileName, data) => {
     fs.writeFile(fileName, data, (err) => {
         console.log(err);
@@ -78,14 +78,14 @@ writeToFile = (fileName, data) => {
     console.log("Team made successfully!")
 }
 
-// the main team making function that askes the questions and then pushes the output to the team array
-makeTeam = async() => {
+
+createTeam = async() => {
     let addEmployee = true
     console.log("Team builder running! Answer following questions:");
     while(addEmployee){
         await inquirer.prompt(employeeQuestions).then(async answers => {
             let employee = employeeFunc(answers.name, answers.id, answers.email, answers.role);
-            await employee.roleBasedQuestions();
+            await employee.employeeQuestions();
             team.push(employee);
         });
 
@@ -105,7 +105,7 @@ makeTeam = async() => {
 }
 
 
-makeTeam(); // Execute main program function
+createTeam(); // Execute main program function
 
 // Write code to use inquirer to gather information about the development team members,
 // and to create objects for each team member (using the correct classes as blueprints!)
