@@ -10,85 +10,18 @@ const outputPath = path.join(OUTPUT_DIR, "team.html");
 
 const render = require("./lib/htmlRenderer");
 
+// empty array waiting for the team to be pushed
+const team = [];
 
-
-const team = []; // empty array for team members
-
-const inqManager = [
+// the questions for the user
+const employeeQuestions = [
     {
         type: "input",
-        name: "manName",
-        message: "What is the manager's name?",
-        validate: (value) => {
-            if (value === "" || value === null) {
-                return "Name can not be empty.";
-            } else {
-                return true;
-            }
-        }
-    },
-    {
-        type: "input",
-        name: "manId",
-        message: "What is the manager's ID?",
-        validate: (value) => {
-            if (value === "" || value === null) {
-                return "ID can not be empty.";
-            } else {
-                return true;
-            }
-        }
-    },
-    {
-        type: "input",
-        name: "manEmail",
-        message: "What is the manager's email?",
-        validate:   (value) => {
-
-            const valid = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(value)
-
-            if (value === "" || value === null) {
-                return "Email can not be empty.";
-            } else if (valid) {
-                return true;
-            } else {
-                return "Please enter a valid email."
-            }
-        }
-    },
-    {
-        type: "input",
-        name: "manPhone",
-        message: "What is the manager's office phone number?",
-        validate: (value) => {
-
-            const valid = /^[(]{0,1}[0-9]{3}[)]{0,1}[-\s\.]{0,1}[0-9]{3}[-\s\.]{0,1}[0-9]{4}$/.test(value);
-
-            if (value === "" || value === null) {
-                return "Phone number can not be empty.";                
-            } else if (valid) {
-                return true;
-            } else {
-                return "Please enter a valid phone number."
-            }
-        }
-    },
-]; // Array of questions for a manager
-
-const inqTeam = [
-    {
-        type: "list",
-        name: "empRole",
-        message: "What is the employee's role?",
-        choices: ["Engineer", "Intern"]
-    },
-    {
-        type: "input",
-        name: "empName",
+        name: "name",
         message: "What is the employee's name?",
         validate: (value) => {
             if (value === "" || value === null) {
-                return "Name can not be empty.";
+                return "Employee name cannot be empty."
             } else {
                 return true;
             }
@@ -96,11 +29,11 @@ const inqTeam = [
     },
     {
         type: "input",
-        name: "empId",
-        message: "What is the employee's ID?",
+        name: "id",
+        message: "What is the employee's ID nubmer?",
         validate: (value) => {
             if (value === "" || value === null) {
-                return "ID can not be empty.";
+                return "Employee ID cannot be empty."
             } else {
                 return true;
             }
@@ -108,94 +41,71 @@ const inqTeam = [
     },
     {
         type: "input",
-        name: "empEmail",
-        message: "What is the employee's email?",
-        validate:   (value) => {
-
-            const valid = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(value)
-
+        name: "email",
+        message: "What is the Employee's email?",
+        validate: (value) => {
             if (value === "" || value === null) {
-                return "Email can not be empty.";
-            } else if (valid) {
-                return true;
+                return "Employee email cannot be empty."
             } else {
-                return "Please enter a valid email."
+                return true;
             }
         }
+    },
+    {
+        type: "list",
+        name: "role",
+        message: "What is the Employee's role?",
+        choices: ["manager", "engineer", "intern"]
     }
-]; // Array of questions for an employee
+];
 
-
-createEmployee = (name, id, email, role) => {
-
-    switch(role) {
-        case "Engineer":
-            return new Engineer(name, id, email, "");
-            break;
-        case "Intern":
-            return new Intern(name, id, email, "");
-            break;
+// the function the filters the employee based on the role, sent to classes
+employeeFunc = (name, id, email, role) => {
+    if(role === "manager") {
+        return new Manager(name, id, email, "");
+    } else if (role === "engineer") {
+        return new Engineer(name, id, email, "");
+    } else {
+        return new Intern(name, id, email, "");
     }
+};
 
-} // Function to create a new instance of an employee type
-
+// write to file function that creates the file
 writeToFile = (fileName, data) => {
     fs.writeFile(fileName, data, (err) => {
-        if (err) {
-            return console.log(err);
-        } 
+        console.log(err);
+    })
+    console.log("Team made successfully!")
+}
 
-        console.log("HTML file successfully generated!!");
-    });
-} // Function to write a file to disk
-
-init = async () => {
-
-    let moreEmp = true; // flag to track if there are more employees to enter
-
-    console.log(`
-    Let's build a team of engineers! Start with a manager:    
-    `);
-    
-    await inquirer.prompt(inqManager).then((answers) => {
-        const manager = new Manager(answers.manName, answers.manId, answers.manEmail, answers.manPhone);
-        team.push(manager);
-    });
-
-    console.log(`
-    
-    Add more members to the team:
-    
-    `);
-
-    while (moreEmp) {
-
-        await inquirer.prompt(inqTeam).then(async (answers) => {
-            let employee = createEmployee(answers.empName, answers.empId, answers.empEmail, answers.empRole);
-            await employee.askCustomInfo();
+// the main team making function that askes the questions and then pushes the output to the team array
+makeTeam = async() => {
+    let addEmployee = true
+    console.log("Team builder running! Answer following questions:");
+    while(addEmployee){
+        await inquirer.prompt(employeeQuestions).then(async answers => {
+            let employee = employeeFunc(answers.name, answers.id, answers.email, answers.role);
+            await employee.roleBasedQuestions();
             team.push(employee);
         });
 
-        
-        await inquirer.prompt([
+        await inquirer.prompt(
             {
                 type: "confirm",
-                name: "empMore",
-                message: "Would you like to add more employees to the team?"
+                name: "addEmployee",
+                message: "Would you like to add another employee?"
             }
-        ]).then((answers) => {
-            moreEmp = answers.empMore;
+        ).then(answers => {
+            addEmployee = answers.addEmployee;
         });
-
     }
 
     const output = render(team);
     writeToFile(outputPath, output);
+}
 
-} // Main program function
 
-
-init(); // Execute main program function
+makeTeam(); // Execute main program function
 
 // Write code to use inquirer to gather information about the development team members,
 // and to create objects for each team member (using the correct classes as blueprints!)
